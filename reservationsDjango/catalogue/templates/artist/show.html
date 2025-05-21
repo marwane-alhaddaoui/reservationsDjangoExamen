@@ -12,6 +12,14 @@
     <p><strong>Prénom :</strong> {{ artist.first_name }}</p>
     <p><strong>Nom :</strong> {{ artist.last_name }}</p>
 
+    
+    {% if artist.troupe %}
+        <p><strong>Troupe :</strong> {{ artist.troupe.name }}</p>
+        <img src="{{ artist.troupe.logo_url }}" alt="Logo de la troupe" style="width: 50px; height: auto; display: block;">
+    {% else %}
+        <p><strong>Troupe :</strong> <em>Non affilié</em></p>
+    {% endif %}
+
     <hr>
 
     <h3>🧑‍🎨 Type d'artiste :</h3>
@@ -19,7 +27,7 @@
         {% for at in types %}
             <li>{{ at.type }}</li>
         {% empty %}
-            <li>Ne posséde aucun rôle</li>
+            <li>Ne possède aucun rôle</li>
         {% endfor %}
     </ul>
 
