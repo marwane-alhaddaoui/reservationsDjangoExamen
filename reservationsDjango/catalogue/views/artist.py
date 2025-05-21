@@ -3,6 +3,8 @@ from django.contrib import messages
 
 from catalogue.models import Artist, Type, ArtistType, ArtistTypeShow
 from catalogue.forms import ArtistForm
+from account.models import RoleUser
+from catalogue.models.troupe import Troupe 
 
 def index(request):
     artists = Artist.objects.all()
@@ -14,18 +16,33 @@ def index(request):
 def show(request, artist_id):
     artist = get_object_or_404(Artist, pk=artist_id)
     types = artist.artiste_type.select_related("type")
+    participations = ArtistTypeShow.objects.filter(
+        artist_type__artist=artist
+    ).select_related("artist_type__type", "show")
 
-    participations = ArtistTypeShow.objects.filter(artist_type__artist=artist).select_related(
-        "artist_type__type", "show"
-    )
+    if request.method == "POST":
+        is_admin = RoleUser.objects.filter(
+    user=request.user, role__role='Admin'
+).exists()
+        if is_admin:
+            troupe_id = request.POST.get("troupe_id")
+            if troupe_id:
+                artist.troupe = get_object_or_404(Troupe, pk=troupe_id)
+            else:
+                artist.troupe = None
+            artist.save()
+            messages.success(request, f"Troupe mise à jour pour {artist}")
+        return redirect('catalogue:artist-show', artist_id=artist.id)
 
     return render(request, "artist/show.html", {
         "artist": artist,
         "types": types,
         "participations": participations,
-        "title": f"🎭 {artist}"
+        "title": f"🎭 {artist}",
+        "troupes": Troupe.objects.all(),
+        # expose les rôles pour le template si besoin
+        "role_users": RoleUser.objects.select_related("user", "role"),
     })
-
 
 def create(request):
     if request.method == "POST":

@@ -1,50 +1,81 @@
-<!-- catalogue/templates/artist/show.html -->
 {% extends "base.html" %}
+{% load static %}
+{% load role_tags %}
 
 {% block content %}
-    <div class="form-actions">
-        <a href="{% url 'catalogue:artist-edit' artist.id %}" class="btn btn-primary">✏️ Modifier</a>
-        <a href="{% url 'catalogue:artist-delete' artist.id %}" class="btn btn-danger">🗑 Supprimer</a>
-    </div>
-    
-    <h2>{% block title %}{{ title }}{% endblock %}</h2>
+  <div class="form-actions">
+      <a href="{% url 'catalogue:artist-edit' artist.id %}" class="btn btn-primary">✏️ Modifier</a>
+      <a href="{% url 'catalogue:artist-delete' artist.id %}" class="btn btn-danger">🗑 Supprimer</a>
+  </div>
+  
+  <h2>{{ title }}</h2>
 
-    <p><strong>Prénom :</strong> {{ artist.first_name }}</p>
-    <p><strong>Nom :</strong> {{ artist.last_name }}</p>
+  <p><strong>Prénom :</strong> {{ artist.first_name }}</p>
+  <p><strong>Nom :</strong> {{ artist.last_name }}</p>
 
-    
-    {% if artist.troupe %}
-        <p><strong>Troupe :</strong> {{ artist.troupe.name }}</p>
-        <img src="{{ artist.troupe.logo_url }}" alt="Logo de la troupe" style="width: 50px; height: auto; display: block;">
-    {% else %}
-        <p><strong>Troupe :</strong> <em>Non affilié</em></p>
-    {% endif %}
+  <hr>
 
+  <!-- Affichage de la troupe -->
+  {% if artist.troupe %}
+    <p><strong>Troupe :</strong> {{ artist.troupe.name }}</p>
+    <img src="{{ artist.troupe.logo_url }}"
+         alt="Logo de la troupe"
+         style="width:50px; height:auto; display:block;">
+  {% else %}
+    <p><strong>Troupe :</strong> <em>Non affilié</em></p>
+  {% endif %}
+
+  {% with current_role=role_users|get_user_role_name:request.user %}
+  {% if current_role == 'Admin' %}
     <hr>
-
-    <h3>🧑‍🎨 Type d'artiste :</h3>
-    <ul>
-        {% for at in types %}
-            <li>{{ at.type }}</li>
-        {% empty %}
-            <li>Ne possède aucun rôle</li>
+    <form method="post" style="margin-top:1em;">
+      {% csrf_token %}
+      <label for="troupe_id"><strong>Modifier la troupe :</strong></label>
+      <select name="troupe_id" id="troupe_id">
+        <option value="" {% if not artist.troupe %}selected{% endif %}>Aucune</option>
+        {% for troupe in troupes %}
+          <option value="{{ troupe.id }}"
+            {% if artist.troupe and troupe.id == artist.troupe.id %}selected{% endif %}>
+            {{ troupe.name }}
+          </option>
         {% endfor %}
-    </ul>
+      </select>
+      <button type="submit" class="btn btn-primary">✅ Enregistrer</button>
+    </form>
+  {% endif %}
+{% endwith %}
 
-    <hr>
-    
-    <h3>🎬 Participations artistiques</h3>
-    <ul>
-        {% for link in participations %}
-            <li><a href="{% url 'catalogue:show-show' link.show.slug %}">{{ link.show.title }}</a></li>
-        {% empty %}
-            <li>Aucune participation enregistrée.</li>
-        {% endfor %}
-    </ul>
+  <hr>
 
-    <hr>
+  <h3>🧑‍🎨 Type d'artiste :</h3>
+  <ul>
+    {% for at in types %}
+      <li>{{ at.type }}</li>
+    {% empty %}
+      <li>Ne possède aucun rôle</li>
+    {% endfor %}
+  </ul>
 
-    <div class="form-actions">
-        <a href="{% url 'catalogue:artist-index' %}" class="btn btn-secondary">🔙 Retour à la liste</a>
-    </div>
+  <hr>
+  
+  <h3>🎬 Participations artistiques</h3>
+  <ul>
+    {% for link in participations %}
+      <li>
+        <a href="{% url 'catalogue:show-show' link.show.slug %}">
+          {{ link.show.title }}
+        </a>
+      </li>
+    {% empty %}
+      <li>Aucune participation enregistrée.</li>
+    {% endfor %}
+  </ul>
+
+  <hr>
+
+  <div class="form-actions">
+      <a href="{% url 'catalogue:artist-index' %}" class="btn btn-secondary">
+        🔙 Retour à la liste
+      </a>
+  </div>
 {% endblock %}
