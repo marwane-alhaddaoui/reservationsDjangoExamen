@@ -1,4 +1,5 @@
 from django.db import models
+from catalogue.models.troupe import Troupe
 
 class ArtistManager(models.Manager):
     def get_by_natural_key(self, first_name, last_name):
@@ -7,6 +8,13 @@ class ArtistManager(models.Manager):
 class Artist(models.Model):
     first_name = models.CharField("Prénom", max_length=60)
     last_name = models.CharField("Nom", max_length=60)
+    troupe = models.ForeignKey(
+        Troupe,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="artists"
+    )
 
     objects = ArtistManager()
 
